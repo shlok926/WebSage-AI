@@ -51,54 +51,66 @@ class GeminiAISummarizer(AISummarizer):
         client = self._get_client()
 
         contents = f"Summarize the following extracted webpage content:\n\n{text}"
-        config = types.GenerateContentConfig(
-            system_instruction=SYSTEM_SUMMARIZER_PROMPT,
-            thinking_config=types.ThinkingConfig(thinking_budget=0),
-            temperature=0.3,
-            max_output_tokens=1024,
-        )
+        config_kwargs = {
+            "system_instruction": SYSTEM_SUMMARIZER_PROMPT,
+            "temperature": 0.3,
+            "max_output_tokens": 1024,
+        }
+        if "thinking" in self.model.lower():
+            config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+        config = types.GenerateContentConfig(**config_kwargs)
 
-        try:
-            response = await asyncio.wait_for(
-                client.aio.models.generate_content(
-                    model=self.model,
-                    contents=contents,
-                    config=config,
-                ),
-                timeout=settings.AI_TIMEOUT_SECONDS,
-            )
+        candidate_models = [self.model]
+        if self.model != "gemini-flash-lite-latest":
+            candidate_models.append("gemini-flash-lite-latest")
 
-        except asyncio.TimeoutError:
-            raise AITimeoutError("Gemini API request exceeded the 30-second timeout.")
+        response = None
+        last_error = None
 
-        except errors.APIError as err:
-            if err.code in (401, 403):
-                raise AIAuthenticationError("Invalid or unauthorized Gemini API key.")
-            if err.code == 429:
-                raise AIRateLimitError("Gemini API rate limit reached. Please wait before retrying.")
-            raise AIError(
-                "AI_PROVIDER_ERROR",
-                f"Gemini API returned HTTP status {err.code}.",
-                502,
-            )
-
-        except errors.ClientError as err:
-            code = getattr(err, "code", None)
-            if code in (401, 403):
-                raise AIAuthenticationError("Invalid or unauthorized Gemini API key.")
-            if code == 429:
-                raise AIRateLimitError("Gemini API rate limit reached. Please wait before retrying.")
-            raise AIError("AI_PROVIDER_ERROR", "Gemini client request failed.", 502)
-
-        except errors.ServerError:
-            raise AIError("AI_PROVIDER_ERROR", "Gemini service temporarily unavailable.", 502)
-
-        except (AIError, AIAuthenticationError, AIRateLimitError, AITimeoutError):
-            raise
-
-        except Exception:
-            # Catch unexpected network or connection exceptions without leaking secrets
-            raise AIError("AI_CONNECTION_ERROR", "Failed to communicate with Gemini API.", 502)
+        for model_candidate in candidate_models:
+            try:
+                response = await asyncio.wait_for(
+                    client.aio.models.generate_content(
+                        model=model_candidate,
+                        contents=contents,
+                        config=config,
+                    ),
+                    timeout=settings.AI_TIMEOUT_SECONDS,
+                )
+                if response and hasattr(response, "text") and response.text:
+                    break
+            except asyncio.TimeoutError:
+                raise AITimeoutError("Gemini API request exceeded the 30-second timeout.")
+            except errors.APIError as err:
+                last_error = err
+                if err.code in (401, 403):
+                    raise AIAuthenticationError("Invalid or unauthorized Gemini API key.")
+                if err.code in (404, 429, 503) and model_candidate != candidate_models[-1]:
+                    continue
+                if err.code == 429:
+                    raise AIRateLimitError("Gemini API rate limit reached. Please wait before retrying.")
+                raise AIError("AI_PROVIDER_ERROR", f"Gemini API returned HTTP status {err.code}.", 502)
+            except errors.ClientError as err:
+                last_error = err
+                code = getattr(err, "code", None)
+                if code in (401, 403):
+                    raise AIAuthenticationError("Invalid or unauthorized Gemini API key.")
+                if code in (404, 429) and model_candidate != candidate_models[-1]:
+                    continue
+                if code == 429:
+                    raise AIRateLimitError("Gemini API rate limit reached. Please wait before retrying.")
+                raise AIError("AI_PROVIDER_ERROR", "Gemini client request failed.", 502)
+            except errors.ServerError as err:
+                last_error = err
+                if model_candidate != candidate_models[-1]:
+                    continue
+                raise AIError("AI_PROVIDER_ERROR", "Gemini service temporarily unavailable.", 502)
+            except (AIError, AIAuthenticationError, AIRateLimitError, AITimeoutError):
+                raise
+            except Exception:
+                if model_candidate != candidate_models[-1]:
+                    continue
+                raise AIError("AI_CONNECTION_ERROR", "Failed to communicate with Gemini API.", 502)
 
         if not response or not hasattr(response, "text"):
             raise AIError("AI_MALFORMED_RESPONSE", "Invalid response structure from Gemini provider.", 502)

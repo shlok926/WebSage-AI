@@ -10,8 +10,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.0%2B-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Groq AI](https://img.shields.io/badge/AI_Inference-Groq_LPU-f55036.svg?style=for-the-badge)](https://groq.com/)
-[![Tests](https://img.shields.io/badge/Tests-26%20Passing-success.svg?style=for-the-badge&logo=pytest&logoColor=white)](#-automated-testing--verification)
+[![Groq AI](https://img.shields.io/badge/AI_Primary-Groq_LPU-f55036.svg?style=for-the-badge)](https://groq.com/)
+[![Gemini AI](https://img.shields.io/badge/AI_Alternative-Google_Gemini-4285F4.svg?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
+[![Tests](https://img.shields.io/badge/Tests-35%20Passing-success.svg?style=for-the-badge&logo=pytest&logoColor=white)](#-automated-testing--verification)
 [![Budget](https://img.shields.io/badge/Budget-%E2%82%B90%20Free%20Tier-brightgreen.svg?style=for-the-badge)](#-zero-cost-budget-guarantee)
 
 <p align="center">
@@ -241,11 +242,12 @@ WebSage-AI/
 │   │       └── ai/
 │   │           ├── base.py         # Abstract AI provider interface
 │   │           ├── factory.py      # Provider factory with production guard
+│   │           ├── gemini_provider.py # Google Gemini SDK implementation
 │   │           ├── groq_provider.py# Groq SDK implementation
 │   │           └── mock_provider.py# Deterministic offline mock provider
-│   └── tests/                      # Automated Test Suite (26 tests)
+│   └── tests/                      # Automated Test Suite (35 tests)
 │       ├── conftest.py             # Pytest fixtures & async setup
-│       ├── test_ai_provider.py     # AI provider tests (mock & Groq safety)
+│       ├── test_ai_provider.py     # AI provider tests (mock, Groq, Gemini)
 │       ├── test_api_e2e.py         # End-to-end FastAPI endpoint tests
 │       ├── test_extractor.py       # HTML parsing & truncation tests
 │       ├── test_ssrf_fetcher.py    # SSRF & connection pinning tests
@@ -301,10 +303,42 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Create environment file from template
+# Linux/macOS:
 cp .env.example .env
+# Windows (PowerShell):
+Copy-Item .env.example .env
 ```
 
-### 3. Frontend Setup
+### 3. AI Provider Configuration (`backend/.env`)
+
+Configure your preferred AI provider in `backend/.env`:
+
+#### Option A: Using Google Gemini (Active Alternative)
+1. In `backend/.env`, set `AI_PROVIDER=gemini`.
+2. Insert your Google AI Studio API key:
+   ```env
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=your_actual_gemini_api_key_here
+   GEMINI_MODEL=gemini-2.5-flash
+   USE_MOCK_AI=false
+   ```
+
+#### Option B: Switching to Groq (When Key is Available)
+1. In `backend/.env`, set `AI_PROVIDER=groq`.
+2. Insert your Groq API key:
+   ```env
+   AI_PROVIDER=groq
+   GROQ_API_KEY=your_actual_groq_api_key_here
+   GROQ_MODEL=openai/gpt-oss-20b
+   USE_MOCK_AI=false
+   ```
+
+#### Option C: Offline / Mock Mode (Zero API Calls)
+Leave `USE_MOCK_AI=true` to test the full frontend and backend pipeline offline without any external API keys.
+
+---
+
+### 4. Frontend Setup
 ```bash
 cd ../frontend
 
@@ -325,7 +359,16 @@ python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 * **Swagger Documentation:** `http://127.0.0.1:8000/docs`
 * **Health Check:** `http://127.0.0.1:8000/health`
 
-### 2. Launch Frontend Dev Server
+### 2. Live API Smoke Test (Safe & Non-Exposing)
+To verify that your configured provider generates live summaries without logging or exposing your API key in terminal outputs:
+```bash
+curl -X POST http://127.0.0.1:8000/api/summarize \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://en.wikipedia.org/wiki/Open-source_software"}'
+```
+> **Note:** A 200 OK response with a valid summary indicates live inference succeeded. Notice that the API key remains strictly in backend memory and is never printed to logs or responses. Live Gemini testing remains pending until a valid key is inserted into `backend/.env`.
+
+### 3. Launch Frontend Dev Server
 ```bash
 cd frontend
 npm run dev
@@ -337,7 +380,7 @@ npm run dev
 
 ## 🧪 Automated Testing & Verification
 
-The project includes 26 comprehensive automated tests verifying security constraints, content extraction, and error handling:
+The project includes 35 comprehensive automated tests verifying security constraints, content extraction, and error handling:
 
 ```bash
 # Run backend test suite (from workspace root)
@@ -348,8 +391,17 @@ python -m pytest backend/tests -v -c backend/pytest.ini
 backend\tests\test_ai_provider.py::test_mock_summarizer_standard_output PASSED
 backend\tests\test_ai_provider.py::test_mock_summarizer_simulated_errors PASSED
 backend\tests\test_ai_provider.py::test_groq_provider_missing_key_safety PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_initialization PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_missing_key PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_success_mocked_client PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_empty_or_malformed_response PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_authentication_error PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_rate_limit_error PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_timeout_handling PASSED
+backend\tests\test_ai_provider.py::test_gemini_provider_secret_redaction_on_unexpected_error PASSED
 backend\tests\test_ai_provider.py::test_factory_production_rejects_mock PASSED
-backend\tests\test_ai_provider.py::test_factory_disabled_mock_uses_groq PASSED
+backend\tests\test_ai_provider.py::test_factory_disabled_mock_uses_configured_provider PASSED
+backend\tests\test_ai_provider.py::test_factory_invalid_provider_raises_error PASSED
 backend\tests\test_api_e2e.py::test_health_check_endpoint PASSED
 backend\tests\test_api_e2e.py::test_summarize_success_flow PASSED
 backend\tests\test_api_e2e.py::test_summarize_ssrf_rejection PASSED
@@ -372,7 +424,7 @@ backend\tests\test_validation.py::test_reject_embedded_credentials PASSED
 backend\tests\test_validation.py::test_reject_overlong_urls PASSED
 backend\tests\test_validation.py::test_reject_localhost_destination PASSED
 
-======================= 26 passed in 3.37s =======================
+======================= 35 passed in 3.93s =======================
 ```
 
 ```bash

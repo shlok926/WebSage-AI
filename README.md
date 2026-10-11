@@ -27,23 +27,16 @@
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Live Deployments](#live-deployments)
-- [System Architecture](#system-architecture)
-  - [Component Architecture](#component-architecture)
-  - [Request Execution Flow](#request-execution-flow)
-- [Security Engineering Baseline](#security-engineering-baseline)
-- [Zero-Cost Budget Guarantee](#zero-cost-budget-guarantee)
-- [Tech Stack](#tech-stack)
-- [Repository Structure](#repository-structure)
-- [Local Installation and Setup](#local-installation-and-setup)
-- [Running the Application](#running-the-application)
-- [Automated Testing and Verification](#automated-testing-and-verification)
-- [API Specifications](#api-specifications)
-- [Deployment Guide](#deployment-guide)
-- [Contributing](#contributing)
-- [License](#license)
+| | |
+| :--- | :--- |
+| 1. [Overview](#overview) | 9. [Local Installation & Setup](#local-installation-and-setup) |
+| 2. [Key Features](#key-features) | 10. [Running the Application](#running-the-application) |
+| 3. [Live Deployments](#live-deployments) | 11. [Automated Testing & Verification](#automated-testing-and-verification) |
+| 4. [System Architecture](#system-architecture) | 12. [API Specifications](#api-specifications) |
+| 5. [Security Engineering Baseline](#security-engineering-baseline) | 13. [Deployment Guide](#deployment-guide) |
+| 6. [Zero-Cost Budget Guarantee](#zero-cost-budget-guarantee) | 14. [Contributing](#contributing) |
+| 7. [Tech Stack](#tech-stack) | 15. [License](#license) |
+| 8. [Repository Structure](#repository-structure) | 16. [Author & Contact](#author--contact) |
 
 ---
 
@@ -492,3 +485,22 @@ Review the project guidelines before opening an issue or pull request:
 ## License
 
 This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Author & Contact
+
+<div align="center">
+
+### Shlok Thorat
+*Let's connect on LinkedIn, collaborate, and build amazing things together!*
+
+[![Email](https://img.shields.io/badge/Email-shlokthorat29075%40gmail.com-ea4335?style=flat-square&logo=gmail&logoColor=white)](mailto:shlokthorat29075@gmail.com)
+[![GitHub](https://img.shields.io/badge/GitHub-%40shlok926-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/shlok926)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-shlok--thorat--39916a405-0A66C2?style=flat-square&logo=linkedin&logoColor=white)](https://linkedin.com/in/shlok-thorat-39916a405)
+
+<br/>
+
+Made by Shlok! for Cybersecurity Innovation • [Back to Top](#websage-ai)
+
+</div>

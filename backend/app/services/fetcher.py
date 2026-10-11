@@ -225,6 +225,13 @@ async def fetch_webpage_html(url: str) -> Tuple[str, str, str]:
 
         async with httpx.AsyncClient(**client_kwargs) as client:
             try:
+                # Security Notice (CodeQL py/full-ssrf / CWE-918):
+                # CodeQL flags this GET request because `current_url` originates from user input.
+                # However, full SSRF is strictly mitigated here by:
+                # 1. `validate_url_and_resolve()` pre-resolving and blocking private, loopback, link-local,
+                #    cloud metadata (169.254.169.254), multicast, and non-global IPs.
+                # 2. `PinningTransport(current_ip)` overriding the HTTP transport layer to bind the outbound
+                #    socket directly to the pre-validated public IP, preventing DNS rebinding (TOCTOU attacks).
                 async with client.stream("GET", current_url, headers=headers) as response:
                     # Check for redirect status codes
                     if response.status_code in (301, 302, 303, 307, 308):

@@ -8,13 +8,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-19-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.0%2B-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![React](https://img.shields.io/badge/React-19.2-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8.3%2B-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4.3-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Gemini AI](https://img.shields.io/badge/AI_Engine-Google_Gemini-4285F4.svg?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![Tests](https://img.shields.io/badge/Tests-35%20Passing-success.svg?style=for-the-badge&logo=pytest&logoColor=white)](#automated-testing-and-verification)
-[![Budget](https://img.shields.io/badge/Budget-%E2%82%B90%20Free%20Tier-brightgreen.svg?style=for-the-badge)](#zero-cost-budget-guarantee)
+[![Tests](https://img.shields.io/badge/Tests-49%20Passing-success.svg?style=for-the-badge&logo=pytest&logoColor=white)](#automated-testing-and-verification)
+[![Tier](https://img.shields.io/badge/Tier-Eligible%20Free%20Tier-brightgreen.svg?style=for-the-badge)](#eligible-free-tier-architecture)
 
 <p align="center">
   <b>Transform long articles, documentation pages, and news reports into concise, objective syntheses in seconds.</b><br/>
@@ -37,7 +37,7 @@
 | 3. [Live Deployments](#live-deployments) | 11. [Automated Testing & Verification](#automated-testing-and-verification) |
 | 4. [System Architecture](#system-architecture) | 12. [API Specifications](#api-specifications) |
 | 5. [Security Engineering Baseline](#security-engineering-baseline) | 13. [Deployment Guide](#deployment-guide) |
-| 6. [Zero-Cost Budget Guarantee](#zero-cost-budget-guarantee) | 14. [Contributing](#contributing) |
+| 6. [Eligible Free-Tier Architecture](#eligible-free-tier-architecture) | 14. [Contributing](#contributing) |
 | 7. [Tech Stack](#tech-stack) | 15. [License](#license) |
 | 8. [Repository Structure](#repository-structure) | 16. [Author & Contact](#author--contact) |
 
@@ -49,7 +49,7 @@ Reading entire documentation manuals or news articles to extract a few key takea
 
 **WebSage AI** provides a security-first summarization pipeline:
 
-1. **Validates and Pins Outbound Traffic:** Blocks SSRF attempts and binds connections to pre-verified public IP addresses.
+1. **Validates and Pins Outbound Traffic:** Blocks SSRF attempts and binds connections to pre-verified public IP addresses (fails closed if secure transport is unavailable).
 2. **Extracts and Purifies Content:** Parses HTML documents, discards boilerplate and scripts, and caps readable text at 20,000 characters.
 3. **AI Synthesis:** Passes clean article content to an isolated LLM inference prompt (Google Gemini or Groq) to deliver high-density, factual summaries in seconds.
 
@@ -58,23 +58,24 @@ Reading entire documentation manuals or news articles to extract a few key takea
 ## Key Features
 
 - **Hardened SSRF Protection:** Pre-request DNS resolution rejecting RFC 1918 private subnets, loopbacks, link-local cloud metadata (`169.254.169.254`), multicast, and CGNAT (`100.64.0.0/10`).
-- **DNS Rebinding (TOCTOU) Defense:** Custom socket pinning (`PinningTransport`) binds the outbound TCP socket directly to the pre-validated public IP address, preventing DNS rebinding race attacks.
+- **Fail-Closed Socket Pinning:** Custom socket pinning (`PinningTransport`) binds the outbound TCP socket directly to the pre-validated public IP address, preventing DNS rebinding race attacks. Never falls back to unpinned transport.
+- **Per-Client Rate Limiting:** Enforces abuse protection on inference endpoints (default 10 req/min per client) with configurable trusted proxy header resolution to protect quotas.
 - **Streaming Safety Cap:** Hard limits downloads to 2 MiB, terminating connections mid-stream if oversized to prevent memory exhaustion and decompression bombs.
 - **Controlled Redirect Traversal:** Enforces a maximum of 3 redirect hops, re-validating the destination IP before opening each new connection.
 - **Content Boilerplate Stripper:** BeautifulSoup4 parser strips `<nav>`, `<header>`, `<footer>`, `<aside>`, `<script>`, `<style>`, and tracker tags.
-- **Multi-Provider AI Architecture:** First-class support for Google Gemini (`gemini-flash-latest`, `gemini-flash-lite-latest`) and Groq (`openai/gpt-oss-20b`), with an offline deterministic mock provider for zero-cost development.
+- **Multi-Provider AI Architecture:** First-class support for Google Gemini (`gemini-flash-latest`, `gemini-2.5-flash`) and Groq (`openai/gpt-oss-20b`), with an offline deterministic mock provider for zero-cost development.
 - **Refined Dark Interface:** Modern React 19 single-page application built with TypeScript, Tailwind CSS v4, Lucide icons, keyboard shortcuts, and one-click clipboard copying.
 
 ---
 
 ## Live Deployments
 
-| Component | URL | Platform | Status |
+| Component | URL | Platform | Note |
 | :--- | :--- | :--- | :--- |
-| **Frontend Application** | [https://web-sage-ai.vercel.app/](https://web-sage-ai.vercel.app/) | Vercel | Active |
-| **Backend REST API** | [https://websage-ai.onrender.com](https://websage-ai.onrender.com) | Render | Active |
-| **API Health Check** | [https://websage-ai.onrender.com/health](https://websage-ai.onrender.com/health) | Render | Active |
-| **Interactive Swagger Docs** | [https://websage-ai.onrender.com/docs](https://websage-ai.onrender.com/docs) | Render | Active |
+| **Frontend Application** | [https://web-sage-ai.vercel.app/](https://web-sage-ai.vercel.app/) | Vercel | Hosted SPA client |
+| **Backend REST API** | [https://websage-ai.onrender.com](https://websage-ai.onrender.com) | Render | Free web service (spins down on idle; cold start ~50s) |
+| **API Health Check** | [https://websage-ai.onrender.com/health](https://websage-ai.onrender.com/health) | Render | Unthrottled service health probe |
+| **Interactive Swagger Docs** | [https://websage-ai.onrender.com/docs](https://websage-ai.onrender.com/docs) | Render | Interactive OpenAPI documentation |
 
 ---
 
@@ -182,42 +183,48 @@ Web-crawling applications are intrinsically exposed to server-side network trave
 | :--- | :--- | :--- |
 | **SSRF (Internal Network)** | Target URL points to `192.168.1.1` or `10.0.0.1` | **Rejected.** DNS pre-resolution verifies all resolved IPs against `ipaddress.is_global`. |
 | **Cloud Metadata Theft** | Attacker probes `http://169.254.169.254/latest/meta-data` | **Rejected.** Link-local addresses (`169.254.0.0/16`) are blocked before socket creation. |
-| **DNS Rebinding (TOCTOU)** | Domain resolves to public IP on initial check, but switches to `127.0.0.1` on connect | **Mitigated.** `PinningTransport` pins the socket directly to the validated IP, preserving SNI and TLS validation. |
+| **DNS Rebinding (TOCTOU)** | Domain resolves to public IP on initial check, but switches to `127.0.0.1` on connect | **Mitigated.** `PinningTransport` pins the socket directly to the validated IP, preserving SNI and TLS validation. Fails closed if unavailable. |
 | **Redirect Poisoning** | Public URL issues a `302 Redirect` to internal address space | **Mitigated.** Automatic redirects are disabled. Destinations are re-validated at each hop (maximum 3). |
 | **Decompression Bomb** | Server returns an infinite or multi-gigabyte body | **Mitigated.** Streaming reader enforces a hard **2 MiB cap** and terminates the connection immediately. |
 | **Prompt Injection** | Scraped page contains malicious instructions (e.g. *"Ignore previous instructions..."*) | **Mitigated.** Content is isolated within explicit structural tags; system prompt instructs LLM to treat scraped content strictly as untrusted data. |
+| **API Abuse / DoS** | Repeated requests exhaust AI quotas or flood the server | **Mitigated.** Per-client rate limiting (SlowAPI) with spoof-resistant IP resolution; health check endpoint exempt. |
 | **Credential Leakage** | API keys or server stack traces exposed in logs or responses | **Mitigated.** Strict exception sanitization; API keys reside exclusively in backend environment memory. |
 
 ---
 
-## Zero-Cost Budget Guarantee
+## Eligible Free-Tier Architecture
 
-WebSage AI is engineered to operate continuously at **zero mandatory financial cost**:
+WebSage AI is engineered to operate on provider free tiers for demonstration and personal use:
 
-- **AI Inference:** Google Gemini API free tier or Groq Cloud free tier (`openai/gpt-oss-20b`).
-- **Backend Hosting:** Render Free Web Services (750 free instance hours per month).
-- **Frontend Hosting:** Vercel Hobby Tier or Cloudflare Pages (100 GB bandwidth per month).
+- **AI Inference:** Google Gemini API free tier or Groq Cloud free tier (`openai/gpt-oss-20b`). Quotas and rate limits (RPM/TPM) are subject to provider availability and terms.
+- **Backend Hosting:** Render Free Web Services (750 free instance hours per month; spins down after 15 minutes of inactivity).
+- **Frontend Hosting:** Vercel Hobby Tier (100 GB bandwidth per month).
 - **Development and CI:** Fully functional offline mode using `USE_MOCK_AI=true` for zero token consumption.
+
+> [!NOTE]
+> Free-tier services are subject to platform terms, cold-start latency, and concurrency limits. Production deployments with strict availability requirements should provision dedicated resources.
 
 ---
 
 ## Tech Stack
 
 ### Backend
-- **Python 3.10+** (Asynchronous runtime)
+- **Python 3.10+** (Asynchronous runtime, tested on 3.11)
 - **FastAPI** (REST framework with automated OpenAPI documentation)
 - **Pydantic v2 and Pydantic-Settings** (Strict request and environment validation)
-- **HTTPX and HTTPCore** (Async HTTP client with custom socket pinning)
+- **HTTPX & HTTPCore** (Async HTTP client with custom socket pinning; pinned for compatibility)
+- **SlowAPI** (In-memory per-client rate limiting)
 - **BeautifulSoup4** (HTML sanitization and text extraction)
 - **Google GenAI SDK** (`google-genai` for Gemini inference)
 - **Groq SDK** (LPU inference engine)
 - **Pytest and Pytest-Asyncio** (Automated test suite)
 
 ### Frontend
-- **React 19** (Concurrent UI library)
-- **TypeScript 5** (Strict type safety)
-- **Vite 6** (Frontend build tooling and bundler)
-- **Tailwind CSS v4** (Utility-first styling with modern dark theme)
+- **React 19.2** (Concurrent UI library)
+- **TypeScript 6.0** (Strict type safety)
+- **Vite 8.3** (Next-generation frontend build tooling and bundler)
+- **Tailwind CSS v4.3** (Utility-first styling with modern dark theme)
+- **Oxlint 1.81** (High-performance static analysis linter)
 - **Lucide React** (Accessible SVG iconography)
 
 ---
@@ -226,6 +233,10 @@ WebSage AI is engineered to operate continuously at **zero mandatory financial c
 
 ```text
 WebSage-AI/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                  # GitHub Actions CI (pytest, lint, build)
+│       └── codeql.yml              # CodeQL static application security testing
 ├── .gitignore                      # Git exclusion rules
 ├── CODE_OF_CONDUCT.md              # Contributor Covenant v2.1
 ├── CONTRIBUTING.md                  # Development guidelines & PR process
@@ -241,27 +252,28 @@ WebSage-AI/
 ├── backend/                        # FastAPI Backend Application
 │   ├── .env.example                # Configuration template
 │   ├── pytest.ini                  # Pytest configuration
-│   ├── requirements.txt            # Python dependencies
+│   ├── requirements.txt            # Python dependencies (pinned compatibility)
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── config.py               # Application settings
-│   │   ├── main.py                 # FastAPI application routes & middleware
+│   │   ├── main.py                 # FastAPI application routes, rate limiting & middleware
 │   │   ├── models.py               # Pydantic schemas (Request/Response/Errors)
 │   │   └── services/
 │   │       ├── extractor.py        # BeautifulSoup4 HTML text parser
-│   │       ├── fetcher.py          # SSRF-hardened pinned HTTPX fetcher
+│   │       ├── fetcher.py          # SSRF-hardened fail-closed pinned HTTPX fetcher
 │   │       └── ai/
 │   │           ├── base.py         # Abstract AI provider interface
 │   │           ├── factory.py      # Provider factory with production guard
 │   │           ├── gemini_provider.py # Google Gemini SDK implementation
 │   │           ├── groq_provider.py# Groq SDK implementation
 │   │           └── mock_provider.py# Deterministic offline mock provider
-│   └── tests/                      # Automated Test Suite (35 tests)
+│   └── tests/                      # Automated Test Suite (49 tests)
 │       ├── conftest.py             # Pytest fixtures & async setup
 │       ├── test_ai_provider.py     # AI provider tests (mock, Groq, Gemini)
 │       ├── test_api_e2e.py         # End-to-end FastAPI endpoint tests
 │       ├── test_extractor.py       # HTML parsing & truncation tests
-│       ├── test_ssrf_fetcher.py    # SSRF & connection pinning tests
+│       ├── test_rate_limiter.py    # Rate limiting & spoofing prevention tests
+│       ├── test_ssrf_fetcher.py    # SSRF & connection pinning fail-closed tests
 │       └── test_validation.py      # URL & IP validation tests
 │
 └── frontend/                       # React 19 Frontend Application
@@ -287,8 +299,8 @@ WebSage-AI/
 ## Local Installation and Setup
 
 ### Prerequisites
-- **Python:** Version `3.10` or higher
-- **Node.js:** Version `18.0` or higher and **npm** `9.0`+
+- **Python:** Version `3.10` or higher (Python 3.11 recommended)
+- **Node.js:** Version `20.0` or higher (required by Vite 8) and **npm** `9.0`+
 - **Git:** Version `2.x`
 
 ### 1. Clone the Repository
@@ -328,7 +340,7 @@ Configure your preferred AI provider in `backend/.env`:
 ```env
 AI_PROVIDER=gemini
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=gemini-flash-latest
+GEMINI_MODEL=gemini-2.5-flash
 USE_MOCK_AI=false
 ```
 
@@ -377,7 +389,7 @@ npm run dev
 
 ## Automated Testing and Verification
 
-The test suite includes 35 comprehensive automated tests covering security invariants, content parsing, and provider error handling:
+The test suite includes 49 comprehensive automated tests covering security invariants, socket pinning fail-closed behavior, rate limiting, and provider error handling:
 
 ```bash
 # Run backend test suite from repository root
@@ -385,12 +397,13 @@ python -m pytest backend/tests -v -c backend/pytest.ini
 ```
 
 ```text
-======================= 35 passed in 3.95s =======================
+======================= 49 passed in 3.47s =======================
 ```
 
-To verify the frontend TypeScript types and production build:
+To run static analysis and build the frontend production bundle:
 ```bash
 cd frontend
+npm run lint
 npm run build
 ```
 
@@ -437,7 +450,8 @@ Summarizes an accessible public webpage.
 | `413 Payload Too Large` | `PAYLOAD_TOO_LARGE` | Streamed HTML exceeded the 2 MiB safety limit. |
 | `415 Unsupported Media` | `UNSUPPORTED_CONTENT`| Response is not HTML (e.g. PDF, binary, audio). |
 | `422 Unprocessable` | `INSUFFICIENT_CONTENT`| Extracted readable text is fewer than 50 characters. |
-| `429 Too Many Requests` | `RATE_LIMIT_EXCEEDED`| Upstream AI provider rate limit reached. |
+| `429 Too Many Requests` | `RATE_LIMIT_EXCEEDED`| Client rate limit exceeded (10 req/min default) or upstream AI provider rate limit. |
+| `500 Internal Error` | `SECURITY_ERROR` | Secure transport unavailable or failed to initialize (fails closed). |
 | `502 Bad Gateway` | `UPSTREAM_ERROR` | Target website returned an error or AI provider failed. |
 | `504 Gateway Timeout` | `UPSTREAM_TIMEOUT` | Web fetch (>10s) or AI inference (>30s) timed out. |
 
@@ -458,9 +472,11 @@ Summarizes an accessible public webpage.
    - `ENVIRONMENT`: `production`
    - `AI_PROVIDER`: `gemini`
    - `GEMINI_API_KEY`: `<your_gemini_api_key>`
-   - `GEMINI_MODEL`: `gemini-flash-latest`
+   - `GEMINI_MODEL`: `gemini-2.5-flash`
    - `USE_MOCK_AI`: `false`
-   - `CORS_ORIGINS`: `*`
+   - `RATE_LIMIT_SUMMARIZE`: `10/minute`
+   - `TRUST_PROXY_HEADERS`: `true` *(Render terminates TLS and forwards client IP headers)*
+   - `CORS_ORIGINS`: `https://web-sage-ai.vercel.app` *(Specify exact deployed frontend origin; avoid wildcard `*` in production)*
    - `PYTHON_VERSION`: `3.11.9`
 
 ### Frontend on Vercel

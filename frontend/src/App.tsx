@@ -141,7 +141,7 @@ export function App() {
       <footer className="w-full py-6 px-4 border-t border-slate-900 text-center text-xs text-slate-500">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>WebSage AI • Demonstrator Project v1.2</span>
-          <span>FastAPI • React • TypeScript • Groq LPU</span>
+          <span>FastAPI • React 19 • TypeScript • AI-Powered</span>
         </div>
       </footer>
     </div>

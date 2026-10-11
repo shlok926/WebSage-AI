@@ -32,6 +32,16 @@ class Settings(BaseSettings):
     FETCH_TIMEOUT_SECONDS: float = 10.0
     AI_TIMEOUT_SECONDS: float = 30.0
 
+    # Rate Limiting Configuration
+    RATE_LIMIT_SUMMARIZE: str = Field(
+        default="10/minute",
+        description="Per-client rate limit for /api/summarize endpoint (e.g. '10/minute')"
+    )
+    TRUST_PROXY_HEADERS: bool = Field(
+        default=False,
+        description="Whether to trust X-Forwarded-For headers from verified reverse proxies"
+    )
+
     # CORS Configuration
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
@@ -48,6 +58,16 @@ class Settings(BaseSettings):
                 return json.loads(v)
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
+
+    @field_validator("RATE_LIMIT_SUMMARIZE", mode="after")
+    @classmethod
+    def validate_rate_limit(cls, v: str) -> str:
+        try:
+            from limits import parse
+            parse(v)
+            return v
+        except Exception:
+            raise ValueError(f"Invalid rate limit string: '{v}'. Expected format like '10/minute' or '100/hour'.")
 
     model_config = SettingsConfigDict(
         env_file=".env",

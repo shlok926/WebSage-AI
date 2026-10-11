@@ -9,11 +9,12 @@ import ipaddress
 import socket
 from urllib.parse import urlparse, urljoin
 import httpx
-from typing import Tuple, Optional
+import ssl
+from typing import Tuple, Optional, Union
 
 from app.config import settings
 
-# Attempt to configure IP-pinning transport to eliminate DNS rebinding TOCTOU window
+# Configure IP-pinning transport to eliminate DNS rebinding TOCTOU window
 try:
     import httpcore
 
@@ -22,11 +23,13 @@ try:
         def __init__(self, target_ip: str):
             super().__init__()
             self.target_ip = target_ip
-            self._backend = httpcore.AsyncConnectionPool()._network_backend
+            # Use public AnyIOBackend instead of private _network_backend attribute
+            self._backend = httpcore.AnyIOBackend()
 
         async def connect_tcp(self, host: str, port: int, *args, **kwargs):
             # Outbound TCP socket is pinned to the pre-validated IP address,
             # preventing DNS rebinding/TOCTOU attacks where DNS changes after validation.
+            # Host/SNI and TLS certificate verification are preserved at the HTTP/TLS layer.
             return await self._backend.connect_tcp(self.target_ip, port, *args, **kwargs)
 
         async def connect_unix_socket(self, *args, **kwargs):
@@ -39,20 +42,44 @@ try:
         """Custom HTTP transport pinning TCP connections to verified public IP.
 
         Preserves:
-        - Full TLS certificate validation (via standard httpx.create_ssl_context)
-        - Accurate Host headers and TLS SNI (server_hostname) matching target URL
-        - Timeouts and connection pooling
+        - Full TLS certificate validation (CERT_REQUIRED), hostname checking, and SNI
+        - Transport settings (verify, cert, trust_env, limits, http1, http2, retries)
+        - Clean connection pooling and lifecycle without allocating unpinned pools
         """
-        def __init__(self, target_ip: str, **kwargs):
-            super().__init__(**kwargs)
-            ssl_context = httpx.create_ssl_context(verify=True)
+        def __init__(
+            self,
+            target_ip: str,
+            verify: Union[ssl.SSLContext, str, bool] = True,
+            cert: Optional[Union[str, Tuple[str, str]]] = None,
+            trust_env: bool = True,
+            http1: bool = True,
+            http2: bool = False,
+            limits: Optional[httpx.Limits] = None,
+            retries: int = 0,
+            **kwargs,
+        ):
+            # Do not invoke super().__init__ to prevent allocating an unpinned pool.
+            limits = limits or httpx.Limits()
+            if isinstance(verify, ssl.SSLContext):
+                ssl_context = verify
+            else:
+                ssl_context = httpx.create_ssl_context(verify=verify, cert=cert, trust_env=trust_env)
+
             self._pool = httpcore.AsyncConnectionPool(
-                network_backend=PinningNetworkBackend(target_ip),
                 ssl_context=ssl_context,
+                max_connections=limits.max_connections,
+                max_keepalive_connections=limits.max_keepalive_connections,
+                keepalive_expiry=limits.keepalive_expiry,
+                http1=http1,
+                http2=http2,
+                retries=retries,
+                network_backend=PinningNetworkBackend(target_ip),
             )
 
-except Exception:  # pragma: no cover
-    PinningTransport = None  # Fallback if underlying transport backend unavailable
+except Exception:
+    PinningTransport = None
+    PinningNetworkBackend = None
+
 
 
 
@@ -93,6 +120,15 @@ class UpstreamFetchError(FetchError):
     """Raised when upstream fetch fails."""
     def __init__(self, message: str = "Failed to retrieve the requested webpage."):
         super().__init__("UPSTREAM_ERROR", message, 502)
+
+
+class SecureTransportError(FetchError):
+    """Raised when secure pinned transport cannot be initialized or used.
+
+    Enforces fail-closed security: unpinned fallback requests are strictly prohibited.
+    """
+    def __init__(self, message: str = "Secure network transport unavailable."):
+        super().__init__("SECURITY_ERROR", message, 500)
 
 
 def is_public_ip(ip_str: str) -> bool:
@@ -215,13 +251,24 @@ async def fetch_webpage_html(url: str) -> Tuple[str, str, str]:
     )
 
     while True:
-        transport = PinningTransport(current_ip) if PinningTransport else None
+        # Enforce fail-closed security: outbound requests are strictly prohibited
+        # if the custom IP-pinning transport is unavailable or fails to initialize.
+        if PinningTransport is None:
+            raise SecureTransportError("Secure network transport is unavailable.")
+
+        try:
+            transport = PinningTransport(current_ip)
+        except Exception:
+            raise SecureTransportError("Failed to initialize secure network transport.")
+
+        if transport is None:
+            raise SecureTransportError("Secure network transport is unavailable.")
+
         client_kwargs = {
             "timeout": timeout,
             "follow_redirects": False,
+            "transport": transport,
         }
-        if transport:
-            client_kwargs["transport"] = transport
 
         async with httpx.AsyncClient(**client_kwargs) as client:
             try:

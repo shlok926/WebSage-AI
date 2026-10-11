@@ -4,10 +4,15 @@ Implements REST API endpoints, security middleware, and standardized error handl
 in strict conformance with Requirements v1.2 and Security Baseline v1.2.
 """
 
+import ipaddress
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.config import settings
 from app.models import SummarizeRequest, SummarizeResponse, ErrorResponse, HealthResponse
@@ -16,11 +21,57 @@ from app.services.extractor import extract_readable_text
 from app.services.ai.base import AIError
 from app.services.ai.factory import get_ai_summarizer
 
+
+def get_client_ip(request: Request) -> str:
+    """Safely extract client IP for rate limiting.
+
+    Only honors forwarded headers if TRUST_PROXY_HEADERS is explicitly True.
+    Defaults to request.client.host (direct socket peer) to prevent arbitrary
+    client-controlled header spoofing.
+
+    When TRUST_PROXY_HEADERS is True:
+    - Checks X-Real-IP first (commonly populated with the true edge client IP).
+    - If inspecting X-Forwarded-For, uses the rightmost candidate (appended by the
+      immediate trusted reverse proxy) rather than the untrusted leftmost entry.
+    - Validates candidate string syntax using ipaddress.ip_address.
+    """
+    if settings.TRUST_PROXY_HEADERS:
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            candidate = real_ip.strip()
+            try:
+                ipaddress.ip_address(candidate)
+                return candidate
+            except ValueError:
+                pass
+
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            ips = [ip.strip() for ip in forwarded_for.split(",") if ip.strip()]
+            if ips:
+                candidate = ips[-1]
+                try:
+                    ipaddress.ip_address(candidate)
+                    return candidate
+                except ValueError:
+                    pass
+
+    if request.client and request.client.host:
+        return request.client.host
+    return "127.0.0.1"
+
+
+
+limiter = Limiter(key_func=get_client_ip)
+
 app = FastAPI(
     title="WebSage AI API",
     version="1.2",
     description="AI Webpage Summarizer Backend API",
 )
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
 
 # CORS Configuration — Restricted to approved frontend origins
 app.add_middleware(
@@ -30,6 +81,20 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Accept"],
 )
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
+    """Handle per-client rate limit exhaustion with standardized 429 response."""
+    return JSONResponse(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        content={
+            "error": {
+                "code": "RATE_LIMIT_EXCEEDED",
+                "message": "Rate limit exceeded. Please wait before submitting more requests.",
+            }
+        },
+    )
 
 
 @app.exception_handler(FetchError)
@@ -84,6 +149,17 @@ async def health_check():
     return HealthResponse(status="ok")
 
 
+def get_summarize_rate_limit() -> str:
+    """Return configured rate limit for /api/summarize endpoint, failing safely if malformed."""
+    limit_str = settings.RATE_LIMIT_SUMMARIZE
+    try:
+        from limits import parse
+        parse(limit_str)
+        return limit_str
+    except Exception:
+        return "10/minute"
+
+
 @app.post(
     "/api/summarize",
     response_model=SummarizeResponse,
@@ -93,11 +169,13 @@ async def health_check():
         415: {"model": ErrorResponse},
         422: {"model": ErrorResponse},
         429: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
         502: {"model": ErrorResponse},
         504: {"model": ErrorResponse},
     },
 )
-async def summarize_webpage(payload: SummarizeRequest):
+@limiter.limit(get_summarize_rate_limit)
+async def summarize_webpage(request: Request, payload: SummarizeRequest):
     """Fetch public HTML webpage, extract readable content, and generate AI summary."""
     # 1. Fetch public HTML safely with SSRF protection, size caps, and timeouts
     html_content, final_url, final_host = await fetch_webpage_html(payload.url)

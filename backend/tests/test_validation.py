@@ -1,5 +1,5 @@
-"""Tests for URL syntax, scheme validation, and IP classification."""
-
+import socket
+from unittest.mock import patch
 import pytest
 from app.services.fetcher import (
     is_public_ip,
@@ -7,6 +7,7 @@ from app.services.fetcher import (
     SSRFValidationError,
     FetchError,
 )
+
 
 
 def test_public_ip_filtering():
@@ -78,3 +79,15 @@ def test_reject_localhost_destination():
         validate_url_and_resolve("http://localhost/admin")
     with pytest.raises(SSRFValidationError):
         validate_url_and_resolve("http://127.0.0.1:8000/api")
+
+
+def test_reject_mixed_public_private_dns():
+    """Verify that if DNS returns mixed answers (both public and private IPs), it is rejected."""
+    mixed_addr_info = [
+        (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443)),
+        (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("10.0.0.1", 443)),
+    ]
+    with patch("socket.getaddrinfo", return_value=mixed_addr_info):
+        with pytest.raises(SSRFValidationError) as exc_info:
+            validate_url_and_resolve("https://example.com")
+        assert exc_info.value.code == "SSRF_BLOCKED"

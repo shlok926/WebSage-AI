@@ -36,7 +36,7 @@ export async function summarizeUrl(url: string): Promise<SummarizeSuccessRespons
       },
       body: JSON.stringify({ url }),
     });
-  } catch (err) {
+  } catch {
     throw new Error('Unable to connect to WebSage AI server. Please verify your connection.');
   }
 

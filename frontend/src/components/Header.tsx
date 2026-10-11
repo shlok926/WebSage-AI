@@ -1,13 +1,15 @@
-import { Sparkles, ShieldCheck, Zap } from 'lucide-react';
+import { ShieldCheck, Zap } from 'lucide-react';
 
 export const Header = () => {
   return (
     <header className="w-full py-6 px-4 border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md sticky top-0 z-20">
       <div className="max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="WebSage AI"
+            className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-cyan-500/20 border border-cyan-500/30"
+          />
           <div>
             <div className="flex items-center space-x-2">
               <span className="font-heading font-bold text-xl tracking-tight text-white">WebSage</span>

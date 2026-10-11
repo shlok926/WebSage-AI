@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/assets/logo.png" alt="WebSage AI Logo" width="130" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);" />
+
 # WebSage AI
 ### High-Speed, Security-Hardened Webpage Summarizer
 

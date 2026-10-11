@@ -39,11 +39,6 @@ export const UrlForm: React.FC<UrlFormProps> = ({ onSubmit, isLoading }) => {
     setValidationError(null);
   };
 
-  const handleExampleClick = (exampleUrl: string) => {
-    setUrl(exampleUrl);
-    setValidationError(null);
-    onSubmit(exampleUrl);
-  };
 
   return (
     <div className="w-full">
@@ -61,7 +56,7 @@ export const UrlForm: React.FC<UrlFormProps> = ({ onSubmit, isLoading }) => {
               setUrl(e.target.value);
               if (validationError) setValidationError(null);
             }}
-            placeholder="Paste any public webpage URL (e.g. https://en.wikipedia.org/wiki/Artificial_intelligence)..."
+            placeholder="Paste your URL..."
             disabled={isLoading}
             autoFocus
             className="w-full pl-12 pr-32 py-4 rounded-2xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all text-sm md:text-base shadow-xl disabled:opacity-60 disabled:cursor-not-allowed"
@@ -108,26 +103,6 @@ export const UrlForm: React.FC<UrlFormProps> = ({ onSubmit, isLoading }) => {
         )}
       </form>
 
-      {/* Suggested quick test links */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-        <span className="text-slate-500">Quick tests:</span>
-        <button
-          type="button"
-          disabled={isLoading}
-          onClick={() => handleExampleClick('https://example.com')}
-          className="px-2.5 py-1 rounded-lg bg-slate-800/60 hover:bg-slate-800 hover:text-cyan-300 border border-slate-700/50 transition-colors cursor-pointer"
-        >
-          example.com
-        </button>
-        <button
-          type="button"
-          disabled={isLoading}
-          onClick={() => handleExampleClick('https://en.wikipedia.org/wiki/Python_(programming_language)')}
-          className="px-2.5 py-1 rounded-lg bg-slate-800/60 hover:bg-slate-800 hover:text-cyan-300 border border-slate-700/50 transition-colors cursor-pointer"
-        >
-          Python Wikipedia
-        </button>
-      </div>
     </div>
   );
 };

@@ -1,128 +1,297 @@
-# WebSage AI — Intelligent Webpage Summarizer
+<div align="center">
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/Frontend-React%2019-61DAFB.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Bundler-Vite-646CFF.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20CSS-38B2AC.svg)](https://tailwindcss.com/)
-[![AI Provider](https://img.shields.io/badge/AI%20Provider-Groq%20LPU-f55036.svg)](https://groq.com/)
-[![Cost: ₹0](https://img.shields.io/badge/Cost-%E2%82%B90%20Free%20Tier-success.svg)](#zero-cost-budget-constraint)
+# 🌐 WebSage AI
+### *High-Speed, Security-Hardened Webpage Summarizer Powered by Groq LPU*
 
-> A lightweight, security-hardened full-stack application that transforms any public article or documentation webpage into an instant, concise 100–200 word summary using high-speed AI inference.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.0%2B-646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Groq AI](https://img.shields.io/badge/AI_Inference-Groq_LPU-f55036.svg?style=for-the-badge)](https://groq.com/)
+[![Tests](https://img.shields.io/badge/Tests-26%20Passing-success.svg?style=for-the-badge&logo=pytest&logoColor=white)](#-automated-testing--verification)
+[![Budget](https://img.shields.io/badge/Budget-%E2%82%B90%20Free%20Tier-brightgreen.svg?style=for-the-badge)](#-zero-cost-budget-guarantee)
+
+<p align="center">
+  <b>Transform long articles, news reports, and documentation into crisp, objective 100–200 word syntheses in seconds.</b><br/>
+  Engineered with enterprise-grade SSRF defense, DNS rebinding socket pinning, and a hard ₹0 operating budget.
+</p>
+
+[Explore Docs](docs/requirements.md) • [Report Bug](https://github.com/shlok926/WebSage-AI/issues) • [Security Policy](SECURITY.md) • [Contributing](CONTRIBUTING.md)
+
+</div>
 
 ---
 
-## 📖 Table of Contents
+## 📑 Table of Contents
+
 - [Overview](#-overview)
 - [Key Features](#-key-features)
 - [System Architecture](#-system-architecture)
+  - [Component Architecture](#component-architecture)
+  - [Request Execution Flow](#request-execution-flow)
+- [Security Engineering Baseline](#-security-engineering-baseline)
+- [Zero-Cost Budget Guarantee](#-zero-cost-budget-guarantee)
 - [Tech Stack](#-tech-stack)
-- [Prerequisites](#-prerequisites)
+- [Repository Structure](#-repository-structure)
 - [Local Installation & Setup](#-local-installation--setup)
 - [Running the Application](#-running-the-application)
-- [Running Automated Tests](#-running-automated-tests)
+- [Automated Testing & Verification](#-automated-testing--verification)
 - [API Contract & Specifications](#-api-contract--specifications)
-- [Security Defenses](#-security-defenses)
-- [Zero-Cost Budget Constraint](#-zero-cost-budget-constraint)
 - [Deployment Guide](#-deployment-guide)
-- [Project Documentation](#-project-documentation)
-- [Contributing & Code of Conduct](#-contributing--code-of-conduct)
+- [Contributing & Community](#-contributing--community)
 - [License](#-license)
 
 ---
 
 ## 🌟 Overview
 
-Users often need key takeaways from dense articles, news reports, and documentation without reading through thousands of words or navigating web clutter. 
+The modern web is inundated with thousands of words of dense prose wrapped in boilerplate layouts, ads, and trackers. Reading an entire article or documentation page just to extract a few key takeaways is time-consuming and inefficient.
 
-**WebSage AI** accepts a publicly accessible URL, fetches the page using defense-in-depth security controls, strips boilerplate HTML (scripts, styles, navigation, ads), extracts readable content, and invokes an AI inference engine to deliver an objective synthesis in seconds.
+**WebSage AI** solves this problem by providing an instantaneous, security-first summarization pipeline:
+1. **Validates & Pins Outbound Traffic:** Blocks malicious SSRF attempts and locks connections to pre-checked public IP addresses.
+2. **Scrapes & Purifies Content:** Parses the HTML document, discards navigational clutter, tracking tags, and scripts, leaving only readable article prose.
+3. **High-Speed AI Synthesis:** Feeds clean content into an isolated Groq LPU prompt (`openai/gpt-oss-20b`) delivering high-density, factual summaries in under 3 seconds.
 
 ---
 
 ## ✨ Key Features
 
-* **Strict SSRF Mitigation:** Pre-request DNS resolution with blocking of private (RFC 1918), loopback, link-local (cloud metadata `169.254.169.254`), multicast, reserved, and CGNAT (`100.64.0.0/10`) IP ranges.
-* **DNS Rebinding Defense:** Outbound IP connection pinning binds the TCP socket exclusively to the pre-validated IP address, eliminating Time-of-Check to Time-of-Use (TOCTOU) DNS manipulation.
-* **Redirect Revalidation:** Enforces a maximum of 3 redirect hops, re-validating the resolved IP on every hop before connecting.
-* **Streaming Byte Cap:** Streams downloaded HTML and aborts immediately if the body exceeds 2 MiB, mitigating Denial-of-Service (DoS) and decompression bombs.
-* **Clean Text Extraction:** Uses BeautifulSoup4 to strip non-content tags (`<script>`, `<style>`, `<nav>`, `<footer>`, `<aside>`) and limits extracted text to 20,000 characters.
-* **Zero Mandatory Cost:** Designed to run 100% free using Groq's Free Tier (`openai/gpt-oss-20b`) with a deterministic offline mock provider for automated tests.
-* **Modern Responsive UI:** Polished dark-mode interface built with React 19, TypeScript, Tailwind CSS, Lucide icons, keyboard navigation, and one-click clipboard copying.
+* 🛡️ **Hardened SSRF Protection:** Pre-request DNS resolution rejecting RFC 1918 private subnets, loopbacks, link-local cloud metadata (`169.254.169.254`), multicast, and CGNAT (`100.64.0.0/10`).
+* 🔒 **DNS Rebinding (TOCTOU) Defense:** Socket connection pinning binds the TCP socket exclusively to the pre-validated public IP address, thwarting DNS race attacks without compromising standard TLS validation or SNI.
+* 🛑 **2 MiB Streaming Cap:** Aborts oversized downloads mid-stream to defend backend workers against HTTP decompression bombs and memory exhaustion.
+* 🔄 **Safe Redirect Traversal:** Enforces a hard limit of 3 redirects, validating the target IP afresh at every hop before opening an outbound socket.
+* 🧹 **Intelligent Content Extraction:** BeautifulSoup4 strips boilerplate elements (`<nav>`, `<header>`, `<footer>`, `<aside>`, `<script>`, `<style>`) and bounds text payload to 20,000 characters.
+* ⚡ **Lightning-Fast AI Inference:** Groq LPU API produces crisp 100–200 word syntheses with minimal latency.
+* 🧪 **Zero-API Dev Experience:** Deterministic mock AI provider enables full development and offline testing with 0 API tokens consumed.
+* 🎨 **Refined Dark Interface:** Modern React 19 SPA with Tailwind CSS v4, Lucide icons, keyboard shortcuts, and one-click clipboard copying.
 
 ---
 
 ## 🏛️ System Architecture
 
-```text
-[ User / Browser ]
-        │  (HTTP / HTTPS)
-        ▼
-[ React 19 + TypeScript SPA (Vite) ]
-        │  POST /api/summarize { "url": "https://..." }
-        ▼
-[ FastAPI Backend API ]
-        │
-        ├─► [ 1. SSRF Validation & DNS Check ]
-        │         Blocks private, loopback, link-local & CGNAT IPs
-        │
-        ├─► [ 2. Outbound Pinned Fetcher (HTTPX) ]
-        │         Connects to validated public IP (DNS rebinding safe)
-        │         Enforces 2 MiB streaming limit & 10s timeout
-        │
-        ├─► [ 3. HTML Content Extractor (BeautifulSoup4) ]
-        │         Strips scripts, styles, boilerplate; bounds text to 20k chars
-        │
-        └─► [ 4. AI Summarizer Service (Groq API) ]
-                  Sends untrusted-isolated prompt to Groq (openai/gpt-oss-20b)
-                  Falls back to mock provider in development/test
-        │
-        ▼
-[ JSON Summary Response ] ──► Rendered on UI with character count & source host
+### Component Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client ["Client Layer"]
+        User(["User / Web Browser"])
+        UI["React 19 + TypeScript SPA<br/>Vite + Tailwind CSS v4"]
+    end
+
+    subgraph Backend ["WebSage AI Backend (FastAPI)"]
+        API["FastAPI REST Controller<br/>POST /api/summarize"]
+        
+        subgraph SecurityPipeline ["Defense-in-Depth Security Pipeline"]
+            SSRF["SSRF Guard<br/>DNS Resolution & IP Range Filter"]
+            Pinning["PinningTransport (HTTPCore)<br/>IP Socket Pinning & Redirect Revalidation"]
+            StreamCap["Streaming Gatekeeper<br/>2 MiB Body Cap & 10s Timeout"]
+        end
+
+        Extractor["Content Extractor (BeautifulSoup4)<br/>Boilerplate Stripper & 20k Char Cap"]
+        
+        subgraph AIService ["AI Engine Layer"]
+            AIFactory["Provider Factory"]
+            GroqProv["Groq Provider<br/>openai/gpt-oss-20b"]
+            MockProv["Deterministic Mock Provider<br/>(Dev & Test Only)"]
+        end
+    end
+
+    subgraph External ["External Services (Outbound)"]
+        TargetWeb["Public Target Webpage<br/>(RFC 1918 / Cloud Metadata Blocked)"]
+        GroqAPI["Groq Cloud LPU API<br/>Fast Free-Tier Inference"]
+    end
+
+    User -->|"Enters URL"| UI
+    UI -->|"POST /api/summarize"| API
+    API -->|"1. Resolve & Inspect IP"| SSRF
+    SSRF -->|"2. Validated Public IP"| Pinning
+    Pinning -->|"3. Pinned Outbound HTTP/HTTPS"| TargetWeb
+    TargetWeb -->|"4. Stream Chunked Response"| StreamCap
+    StreamCap -->|"5. Raw HTML Body"| Extractor
+    Extractor -->|"6. Sanitized Text"| AIFactory
+    AIFactory -->|"Production"| GroqProv
+    AIFactory -.->|"Development / Tests"| MockProv
+    GroqProv -->|"7. Isolated Prompt Call"| GroqAPI
+    GroqAPI -->|"8. 100-200 Word Synthesis"| API
+    API -->|"9. JSON Summary Response"| UI
+    UI -->|"10. Render Cards & Copy Action"| User
+
+    classDef client fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef security fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef ai fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef ext fill:#451a03,stroke:#fb923c,stroke-width:2px,color:#f8fafc;
+
+    class UI,User client;
+    class SSRF,Pinning,StreamCap security;
+    class GroqProv,MockProv,AIFactory ai;
+    class TargetWeb,GroqAPI ext;
 ```
+
+---
+
+### Request Execution Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User
+    participant Frontend as React 19 Frontend
+    participant API as FastAPI Backend
+    participant Fetcher as SSRF Pinned Fetcher
+    participant Target as Target Website
+    participant Parser as BS4 Extractor
+    participant Groq as Groq AI (LPU)
+
+    User->>Frontend: Enters public URL & clicks Summarize
+    Frontend->>API: POST /api/summarize { "url": "..." }
+    API->>Fetcher: Fetch webpage safely
+    Note over Fetcher: Resolve DNS & verify IP != private/cloud
+    Fetcher->>Target: Outbound connection pinned to verified IP
+    Target-->>Fetcher: Stream HTML chunks (capped at 2 MiB)
+    Fetcher-->>API: Verified HTML string
+    API->>Parser: Extract readable content
+    Note over Parser: Strip scripts, styles & boilerplate (cap 20k chars)
+    Parser-->>API: Clean text payload
+    API->>Groq: Generate summary (isolated prompt)
+    Groq-->>API: Return concise summary (100-200 words)
+    API-->>Frontend: 200 OK { summary, source_host, characters }
+    Frontend-->>User: Display summary card with copy action
+```
+
+---
+
+## 🛡️ Security Engineering Baseline
+
+Web-crawling applications are intrinsically susceptible to network traversal attacks. WebSage AI enforces strict controls at every layer:
+
+| Threat Vector | Attack Scenario | WebSage AI Defense |
+| :--- | :--- | :--- |
+| **SSRF (Internal Network)** | Target URL points to `192.168.1.1` or `10.0.0.1` | **Rejected.** DNS pre-resolution checks all IPs against `ipaddress.is_global`. |
+| **Cloud Metadata Theft** | Attacker probes `http://169.254.169.254/latest/meta-data` | **Rejected.** Link-local addresses (`169.254.0.0/16`) are blocked before socket creation. |
+| **DNS Rebinding (TOCTOU)** | Domain resolves to public IP on check, but switches to `127.0.0.1` on connect | **Mitigated.** `PinningTransport` pins the socket directly to the validated IP, preserving SNI and TLS validation. |
+| **Redirect Poisoning** | Public URL issues a `302 Redirect` to internal admin panel | **Mitigated.** Automatic redirects are disabled. Targets are re-validated at each hop (max 3). |
+| **Decompression Bomb** | Server returns an infinite or multi-gigabyte body | **Mitigated.** Streaming reader enforces a hard **2 MiB cap** and terminates connection immediately. |
+| **Prompt Injection** | Scraped page contains malicious instructions (e.g. *"Ignore all instructions..."*) | **Mitigated.** Scraped content is isolated within explicit content tags; system prompt instructs LLM to treat content strictly as untrusted reference data. |
+| **Credential Leakage** | API keys or server stack traces printed in logs or client errors | **Mitigated.** Strict exception sanitization; API keys exist only in backend memory and are never sent to the client. |
+
+---
+
+## 💰 Zero-Cost Budget Guarantee
+
+WebSage AI is purpose-built to operate indefinitely at **₹0 mandatory cost**:
+
+* **AI Inference:** Powered by Groq's official Free Tier using `openai/gpt-oss-20b` (30 Requests/Min, 8,000 Tokens/Min, 200,000 Tokens/Day). No credit card required.
+* **Backend Hosting:** Runs on Render Free Web Services (750 free instance hours/month) or Railway/Koyeb.
+* **Frontend Hosting:** Runs on Vercel Hobby Tier or Cloudflare Pages (100 GB/month bandwidth free).
+* **Development & CI:** Fully functional offline mode using `USE_MOCK_AI=true` for zero token burn.
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Purpose |
-| :--- | :--- | :--- |
-| **Frontend** | React 19, TypeScript, Vite | Fast, responsive single-page application |
-| **Styling** | Tailwind CSS v4, Lucide React | Modern dark aesthetic and accessible components |
-| **Backend** | Python 3.10+, FastAPI, Pydantic v2 | High-performance asynchronous REST API |
-| **HTTP Client** | HTTPX, HTTPCore | Asynchronous streaming fetcher with custom IP pinning |
-| **HTML Parser** | BeautifulSoup4 | Structured HTML parsing and boilerplate removal |
-| **AI Provider** | Groq Free Plan (`openai/gpt-oss-20b`) | Ultra-fast LPU text summarization |
-| **Testing** | Pytest, Pytest-Asyncio | Automated unit, security, and integration tests |
+### Backend
+* **Python 3.10+** (Async runtime)
+* **FastAPI** (REST API framework with OpenAPI schema)
+* **Pydantic v2 & Pydantic-Settings** (Strict request/response validation)
+* **HTTPX & HTTPCore** (Async HTTP client with custom socket pinning)
+* **BeautifulSoup4** (HTML sanitization and text extraction)
+* **Groq Python SDK** (High-speed LPU inference)
+* **Pytest & Pytest-Asyncio** (Automated test suite)
+
+### Frontend
+* **React 19** (Concurrent UI library)
+* **TypeScript 5** (Strict type safety)
+* **Vite 6** (Next-gen frontend tooling and bundler)
+* **Tailwind CSS v4** (Utility-first styling with modern dark theme)
+* **Lucide React** (Clean, accessible SVG iconography)
 
 ---
 
-## 📋 Prerequisites
+## 📂 Repository Structure
 
-Ensure you have the following installed on your machine:
-* **Python:** Version `3.10` or higher (verified on Python 3.14)
-* **Node.js:** Version `18.0` or higher (verified on Node.js v24)
-* **npm:** Version `9.0` or higher (verified on npm 11)
-* **Git:** Version `2.x`
+```text
+WebSage-AI/
+├── .gitignore                      # Git exclusion rules
+├── CODE_OF_CONDUCT.md              # Contributor Covenant v2.1
+├── CONTRIBUTING.md                  # Development guidelines & PR process
+├── LICENSE                         # MIT License
+├── README.md                       # Complete project documentation
+├── SECURITY.md                     # Vulnerability reporting & security baseline
+│
+├── docs/                           # Frozen Requirements v1.2 Specifications
+│   ├── acceptance-criteria.md      # Observable acceptance verification
+│   ├── requirements.md             # Functional requirements & API spec
+│   └── security.md                 # Security baseline & threat models
+│
+├── backend/                        # FastAPI Application
+│   ├── .env.example                # Template environment variables
+│   ├── pytest.ini                  # Pytest configuration
+│   ├── requirements.txt            # Python dependencies
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── config.py               # Pydantic BaseSettings config
+│   │   ├── main.py                 # FastAPI application routes & middleware
+│   │   ├── models.py               # Pydantic schemas (Request/Response/Errors)
+│   │   └── services/
+│   │       ├── extractor.py        # BeautifulSoup4 HTML text parser
+│   │       ├── fetcher.py          # SSRF-hardened pinned HTTPX fetcher
+│   │       └── ai/
+│   │           ├── base.py         # Abstract AI provider interface
+│   │           ├── factory.py      # Provider factory with production guard
+│   │           ├── groq_provider.py# Groq SDK implementation
+│   │           └── mock_provider.py# Deterministic offline mock provider
+│   └── tests/                      # Automated Test Suite (26 tests)
+│       ├── conftest.py             # Pytest fixtures & async setup
+│       ├── test_ai_provider.py     # AI provider tests (mock & Groq safety)
+│       ├── test_api_e2e.py         # End-to-end FastAPI endpoint tests
+│       ├── test_extractor.py       # HTML parsing & truncation tests
+│       ├── test_ssrf_fetcher.py    # SSRF & connection pinning tests
+│       └── test_validation.py      # URL & IP validation tests
+│
+└── frontend/                       # React 19 Single Page Application
+    ├── index.html                  # HTML5 entry point
+    ├── package.json                # NPM dependencies & scripts
+    ├── tsconfig.json               # TypeScript configuration
+    ├── vite.config.ts              # Vite configuration & dev proxy
+    └── src/
+        ├── App.tsx                 # Root application component
+        ├── main.tsx                # React entry point
+        ├── index.css               # Tailwind CSS setup & global styles
+        ├── components/
+        │   ├── Header.tsx          # Brand header & GitHub link
+        │   ├── UrlForm.tsx         # URL input form with validation
+        │   ├── SummaryCard.tsx     # Result display with copy-to-clipboard
+        │   └── ErrorBanner.tsx     # Sanitized error display
+        └── services/
+            └── api.ts              # Typed API client for FastAPI
+```
 
 ---
 
 ## 🚀 Local Installation & Setup
 
+### Prerequisites
+* **Python:** Version `3.10` or higher
+* **Node.js:** Version `18.0` or higher & **npm** `9.0`+
+* **Git:** Version `2.x`
+
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/websage-ai.git
-cd websage-ai
+git clone https://github.com/shlok926/WebSage-AI.git
+cd WebSage-AI
 ```
 
 ### 2. Backend Setup
 ```bash
-# Navigate to backend directory
 cd backend
 
-# Create and activate a virtual environment (optional but recommended)
+# Create virtual environment
 python -m venv venv
+
+# Activate virtual environment
 # Windows:
 venv\Scripts\activate
 # Linux/macOS:
@@ -131,16 +300,15 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Create your local environment configuration from template
+# Create environment file from template
 cp .env.example .env
 ```
 
 ### 3. Frontend Setup
 ```bash
-# In a new terminal, navigate to frontend directory
-cd frontend
+cd ../frontend
 
-# Install frontend dependencies
+# Install dependencies
 npm install
 ```
 
@@ -148,36 +316,67 @@ npm install
 
 ## 💻 Running the Application
 
-### Start Backend API Server
+### 1. Launch Backend Server
 ```bash
 cd backend
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-* Backend API will be available at: `http://127.0.0.1:8000`
-* Interactive API docs (Swagger): `http://127.0.0.1:8000/docs`
-* Health check: `http://127.0.0.1:8000/health`
+* **API Server:** `http://127.0.0.1:8000`
+* **Swagger Documentation:** `http://127.0.0.1:8000/docs`
+* **Health Check:** `http://127.0.0.1:8000/health`
 
-### Start Frontend Development Server
+### 2. Launch Frontend Dev Server
 ```bash
 cd frontend
 npm run dev
 ```
-* Frontend application will be available at: `http://localhost:5173`
-* Vite automatically proxies `/api` and `/health` requests to `http://127.0.0.1:8000`.
+* **Application UI:** `http://localhost:5173`
+* Vite automatically proxies `/api` and `/health` requests to the local backend.
 
 ---
 
-## 🧪 Running Automated Tests
+## 🧪 Automated Testing & Verification
 
-### Backend Test Suite (Pytest)
-Run all 26 unit, security, and integration tests:
+The project includes 26 comprehensive automated tests verifying security constraints, content extraction, and error handling:
+
 ```bash
+# Run backend test suite (from workspace root)
 python -m pytest backend/tests -v -c backend/pytest.ini
 ```
 
-### Frontend Production Build Verification
-Verify TypeScript types and create the production bundle:
+```text
+backend\tests\test_ai_provider.py::test_mock_summarizer_standard_output PASSED
+backend\tests\test_ai_provider.py::test_mock_summarizer_simulated_errors PASSED
+backend\tests\test_ai_provider.py::test_groq_provider_missing_key_safety PASSED
+backend\tests\test_ai_provider.py::test_factory_production_rejects_mock PASSED
+backend\tests\test_ai_provider.py::test_factory_disabled_mock_uses_groq PASSED
+backend\tests\test_api_e2e.py::test_health_check_endpoint PASSED
+backend\tests\test_api_e2e.py::test_summarize_success_flow PASSED
+backend\tests\test_api_e2e.py::test_summarize_ssrf_rejection PASSED
+backend\tests\test_api_e2e.py::test_summarize_invalid_request_body PASSED
+backend\tests\test_api_e2e.py::test_summarize_insufficient_content PASSED
+backend\tests\test_extractor.py::test_clean_html_and_strip_scripts_styles PASSED
+backend\tests\test_extractor.py::test_reject_insufficient_content PASSED
+backend\tests\test_extractor.py::test_truncate_overlong_text PASSED
+backend\tests\test_ssrf_fetcher.py::test_ssrf_blocks_private_ip PASSED
+backend\tests\test_ssrf_fetcher.py::test_ssrf_blocks_aws_metadata_ip PASSED
+backend\tests\test_ssrf_fetcher.py::test_reject_non_html_content_type PASSED
+backend\tests\test_ssrf_fetcher.py::test_enforce_streaming_body_size_limit PASSED
+backend\tests\test_ssrf_fetcher.py::test_upstream_timeout_handling PASSED
+backend\tests\test_ssrf_fetcher.py::test_dns_rebinding_network_backend_pinning PASSED
+backend\tests\test_ssrf_fetcher.py::test_redirect_to_private_ip_is_blocked PASSED
+backend\tests\test_ssrf_fetcher.py::test_redirect_limit_enforcement PASSED
+backend\tests\test_validation.py::test_public_ip_filtering PASSED
+backend\tests\test_validation.py::test_reject_unsupported_schemes PASSED
+backend\tests\test_validation.py::test_reject_embedded_credentials PASSED
+backend\tests\test_validation.py::test_reject_overlong_urls PASSED
+backend\tests\test_validation.py::test_reject_localhost_destination PASSED
+
+======================= 26 passed in 3.37s =======================
+```
+
 ```bash
+# Verify frontend TypeScript types and production build
 cd frontend
 npm run build
 ```
@@ -187,22 +386,22 @@ npm run build
 ## 📡 API Contract & Specifications
 
 ### `POST /api/summarize`
-Extracts readable text from a public HTML webpage and returns an AI summary.
+Summarizes an accessible public webpage.
 
 #### Request Body
 ```json
 {
-  "url": "https://example.com/article"
+  "url": "https://en.wikipedia.org/wiki/Artificial_intelligence"
 }
 ```
 
 #### Success Response (`200 OK`)
 ```json
 {
-  "summary": "A concise, objective summary of the webpage content...",
-  "source_url": "https://example.com/article",
-  "source_host": "example.com",
-  "extracted_characters": 3200
+  "summary": "Artificial intelligence (AI) is the intelligence of machines or software, as opposed to the intelligence of humans or animals. It is a field of study in computer science that develops and studies intelligent machines...",
+  "source_url": "https://en.wikipedia.org/wiki/Artificial_intelligence",
+  "source_host": "en.wikipedia.org",
+  "extracted_characters": 18450
 }
 ```
 
@@ -216,96 +415,64 @@ Extracts readable text from a public HTML webpage and returns an AI summary.
 }
 ```
 
-#### HTTP Status Code Mapping
+#### Status Code & Error Code Mapping
 | Status Code | Error Code | Description |
 | :--- | :--- | :--- |
-| **`200 OK`** | — | Webpage summarized successfully. |
-| **`400 Bad Request`** | `INVALID_URL` / `INVALID_REQUEST` / `SSRF_BLOCKED` | Malformed URL, missing fields, or internal IP target. |
-| **`413 Content Too Large`** | `PAYLOAD_TOO_LARGE` | Downloaded HTML body exceeded the 2 MiB streaming limit. |
-| **`415 Unsupported Media Type`** | `UNSUPPORTED_CONTENT` | Response is not HTML (e.g. PDF, image, audio). |
-| **`422 Unprocessable Entity`** | `INSUFFICIENT_CONTENT` | Webpage contains fewer than 50 readable characters. |
-| **`429 Too Many Requests`** | `RATE_LIMIT_EXCEEDED` | Upstream AI provider quota reached. |
-| **`502 Bad Gateway`** | `UPSTREAM_ERROR` / `AI_PROVIDER_ERROR` | Target site returned error or AI provider failed. |
-| **`504 Gateway Timeout`** | `UPSTREAM_TIMEOUT` / `AI_TIMEOUT` | Web fetch (>10s) or AI inference (>30s) timed out. |
-
-### `GET /health`
-Returns minimal server health status without exposing environment configuration.
-```json
-{
-  "status": "ok"
-}
-```
+| **`200 OK`** | — | Webpage extracted and summarized successfully. |
+| **`400 Bad Request`** | `INVALID_URL` | Malformed URL, missing scheme, or credentials present. |
+| **`400 Bad Request`** | `SSRF_BLOCKED` | Host resolves to private, loopback, or internal address space. |
+| **`413 Payload Too Large`**| `PAYLOAD_TOO_LARGE` | Streamed HTML exceeded the 2 MiB safety limit. |
+| **`415 Unsupported Media`**| `UNSUPPORTED_CONTENT`| Response is not HTML (e.g. PDF, binary, audio). |
+| **`422 Unprocessable`** | `INSUFFICIENT_CONTENT`| Extracted readable text is fewer than 50 characters. |
+| **`429 Too Many Requests`**| `RATE_LIMIT_EXCEEDED`| Upstream AI provider rate quota reached. |
+| **`502 Bad Gateway`** | `UPSTREAM_ERROR` | Target website returned 4xx/5xx or AI provider failed. |
+| **`504 Gateway Timeout`** | `UPSTREAM_TIMEOUT` | Web fetch (>10s) or AI inference (>30s) timed out. |
 
 ---
 
-## 🛡️ Security Defenses
+## 🌐 Deployment Guide
 
-1. **SSRF Isolation:** URLs targeting `localhost`, `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, link-local (`169.254.0.0/16`), cloud metadata (`169.254.169.254`), CGNAT (`100.64.0.0/10`), documentation IPs, or IPv4-mapped IPv6 are strictly rejected.
-2. **DNS Rebinding Prevention:** The outbound TCP connection is pinned to the verified IP address via `PinningTransport`, avoiding TOCTOU socket re-lookups while preserving full TLS certificate and SNI validation.
-3. **Redirect Revalidation:** Redirect targets are re-checked at every hop; redirecting to internal IP spaces is blocked immediately.
-4. **Credential Isolation:** The AI key is backend-only. Never bundled in frontend code, client assets, or logs.
-5. **Prompt Injection Guardrails:** Webpage text is treated as untrusted data; the system prompt explicitly commands the model to disregard instructions embedded within scraped pages.
-6. **No Stack Trace Leakage:** Unhandled exceptions return sanitized error JSON without leaking internal filepaths or stack traces.
-
----
-
-## 💰 Zero-Cost Budget Constraint
-
-WebSage AI is architected with a strict **₹0 budget constraint**:
-* **Groq Free Plan:** Provides generous free inference quotas on active production models (30 RPM, 8,000 TPM, 200,000 TPD). No credit card required.
-* **Render Free Web Service:** 750 free instance hours per month with automatic spin-down after 15 minutes of inactivity.
-* **Vercel Hobby Tier:** 100 GB/month free bandwidth for the React SPA.
-* **Mock Provider:** Used automatically for tests and development without consuming live API tokens.
-
----
-
-## 🚀 Deployment Guide
-
-### Backend on Render (Free Tier)
-1. Create a new **Web Service** on [Render](https://render.com/).
-2. Connect your GitHub repository.
-3. Set the following settings:
+### Deploy Backend to Render (Free Web Service)
+1. Log into [Render Dashboard](https://dashboard.render.com/) and click **New +** → **Web Service**.
+2. Connect the `WebSage-AI` repository.
+3. Configure settings:
    * **Root Directory:** `backend`
    * **Runtime:** `Python 3`
    * **Build Command:** `pip install -r requirements.txt`
    * **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. In **Environment Variables**, add:
+4. Set Environment Variables:
    * `ENVIRONMENT`: `production`
    * `GROQ_API_KEY`: `<your_groq_api_key>`
    * `GROQ_MODEL`: `openai/gpt-oss-20b`
    * `USE_MOCK_AI`: `false`
    * `CORS_ORIGINS`: `https://your-frontend.vercel.app`
 
-### Frontend on Vercel (Hobby Tier)
-1. Import the repository on [Vercel](https://vercel.com/).
-2. Set the following settings:
+### Deploy Frontend to Vercel (Hobby Tier)
+1. Log into [Vercel](https://vercel.com/) and click **Add New...** → **Project**.
+2. Import the `WebSage-AI` repository.
+3. Configure settings:
    * **Root Directory:** `frontend`
    * **Framework Preset:** `Vite`
    * **Build Command:** `npm run build`
    * **Output Directory:** `dist`
-3. In **Environment Variables**, add:
+4. Set Environment Variables:
    * `VITE_API_BASE_URL`: `https://your-backend.onrender.com`
 
 ---
 
-## 📚 Project Documentation
+## 🤝 Contributing & Community
 
-The approved, frozen Requirements v1.2 specification is preserved in the `docs/` directory:
-* [docs/requirements.md](docs/requirements.md) — Scope, functional specifications, and API design.
-* [docs/acceptance-criteria.md](docs/acceptance-criteria.md) — Observable criteria and verification matrix.
-* [docs/security.md](docs/security.md) — Security baseline, SSRF mitigations, and resource limits.
-
----
-
-## 🤝 Contributing & Code of Conduct
-
-Contributions, bug reports, and suggestions are welcome! Please read our:
-* [CONTRIBUTING.md](CONTRIBUTING.md) — Development workflow, testing standards, and pull request procedures.
-* [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Community guidelines and standards of behavior.
-* [SECURITY.md](SECURITY.md) — Vulnerability reporting and disclosure policy.
+We welcome contributions! Please review our community guidelines before opening a pull request:
+* **[CONTRIBUTING.md](CONTRIBUTING.md)** — Pull request checklist, commit message convention, and local development tips.
+* **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — Contributor Covenant v2.1 code of conduct.
+* **[SECURITY.md](SECURITY.md)** — Vulnerability reporting procedure and private disclosure channels.
 
 ---
 
 ## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/shlok926">Shlok Thorat</a> and contributors.</sub>
+</div>

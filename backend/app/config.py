@@ -4,9 +4,9 @@ Loads settings from environment variables and backend/.env file.
 Enforces limits approved in Requirements v1.2.
 """
 
-from typing import List
+from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -16,9 +16,12 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # AI Provider Settings
+    AI_PROVIDER: str = Field(default="groq", description="Selected AI provider: 'groq' or 'gemini'")
     GROQ_API_KEY: str = Field(default="", description="Groq API key")
     GROQ_MODEL: str = Field(default="openai/gpt-oss-20b", description="Selected production Groq model")
-    USE_MOCK_AI: bool = Field(default=True, description="Fallback to mock AI when no key is set or during testing")
+    GEMINI_API_KEY: str = Field(default="", description="Google Gemini API key")
+    GEMINI_MODEL: str = Field(default="gemini-flash-latest", description="Selected Gemini model")
+    USE_MOCK_AI: bool = Field(default=False, description="Fallback to mock AI when no key is set or during testing")
 
     # Security & Resource Limits (from Requirements v1.2 Section 9)
     MAX_URL_LENGTH: int = 2048
@@ -30,11 +33,21 @@ class Settings(BaseSettings):
     AI_TIMEOUT_SECONDS: float = 30.0
 
     # CORS Configuration
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
     ]
+
+    @field_validator("CORS_ORIGINS", mode="after")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            if v.startswith("["):
+                import json
+                return json.loads(v)
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -19,18 +19,6 @@
   Engineered with defense-in-depth SSRF protection, DNS rebinding socket pinning, and strict resource limits.
 </p>
 
-<p align="center">
-  <code>fastapi</code> •
-  <code>react19</code> •
-  <code>typescript</code> •
-  <code>google-gemini</code> •
-  <code>groq-lpu</code> •
-  <code>ssrf-protection</code> •
-  <code>dns-rebinding-defense</code> •
-  <code>web-scraping</code> •
-  <code>ai-summarizer</code> •
-  <code>cybersecurity</code>
-</p>
 
 [Live Application](https://web-sage-ai.vercel.app/) • [API Documentation](https://websage-ai.onrender.com/docs) • [Architecture Specs](docs/requirements.md) • [Security Policy](SECURITY.md)
 

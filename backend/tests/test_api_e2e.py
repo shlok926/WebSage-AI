@@ -27,7 +27,12 @@ async def test_summarize_success_flow(async_client):
     </html>
     """
 
-    with patch("app.main.fetch_webpage_html", return_value=(mock_html, "https://example.com/research", "example.com")):
+    from unittest.mock import AsyncMock, MagicMock
+    mock_ai = MagicMock()
+    mock_ai.summarize = AsyncMock(return_value="Autonomous systems integrate sensing, decision making, and actuation independently.")
+
+    with patch("app.main.fetch_webpage_html", return_value=(mock_html, "https://example.com/research", "example.com")), \
+         patch("app.main.get_ai_summarizer", return_value=mock_ai):
         response = await async_client.post("/api/summarize", json={"url": "https://example.com/research"})
 
         assert response.status_code == 200

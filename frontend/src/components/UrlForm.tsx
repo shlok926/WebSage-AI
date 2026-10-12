@@ -69,7 +69,7 @@ export const UrlForm: React.FC<UrlFormProps> = ({ onSubmit, isLoading }) => {
               disabled={isLoading}
               autoFocus
               aria-label="Webpage URL to summarize"
-              className="w-full pl-10 pr-9 py-2.5 rounded-lg bg-slate-950/80 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full pl-10 pr-9 py-2.5 rounded-lg bg-slate-950/90 border border-slate-800 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:bg-slate-950 focus:text-slate-100 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             />
 
             {url && !isLoading && (

@@ -5,23 +5,27 @@ import { SummaryCard } from './components/SummaryCard';
 import { ErrorBanner } from './components/ErrorBanner';
 import { summarizeUrl } from './services/api';
 import type { SummarizeSuccessResponse } from './services/api';
-import { Sparkles, Shield, Cpu } from 'lucide-react';
+import { Shield, Cpu, Zap, Loader2 } from 'lucide-react';
 
 export function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [summaryData, setSummaryData] = useState<SummarizeSuccessResponse | null>(null);
   const [errorState, setErrorState] = useState<{ message: string; code?: string } | null>(null);
   const [lastSubmittedUrl, setLastSubmittedUrl] = useState<string>('');
+  const [requestDurationMs, setRequestDurationMs] = useState<number | null>(null);
 
   const handleSummarize = async (url: string) => {
-    // Clear prior results before starting new request
     setSummaryData(null);
     setErrorState(null);
+    setRequestDurationMs(null);
     setIsLoading(true);
     setLastSubmittedUrl(url);
 
+    const startTime = performance.now();
     try {
       const result = await summarizeUrl(url);
+      const elapsed = Math.round(performance.now() - startTime);
+      setRequestDurationMs(elapsed);
       setSummaryData(result);
     } catch (err: any) {
       setErrorState({
@@ -36,56 +40,46 @@ export function App() {
   const handleReset = () => {
     setSummaryData(null);
     setErrorState(null);
+    setRequestDurationMs(null);
     setLastSubmittedUrl('');
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 bg-mesh-pattern text-slate-100 flex flex-col">
-      {/* Top Navigation */}
+    <div className="min-h-screen bg-subtle-canvas text-slate-100 flex flex-col font-sans">
+      {/* Product Header */}
       <Header />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-10 md:py-16 flex flex-col items-center">
-        {/* Hero Section */}
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Webpage Summarizer</span>
-          </div>
-
-          <h1 className="font-heading font-extrabold text-3xl sm:text-5xl md:text-6xl text-white tracking-tight leading-tight">
-            Read the web in <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">seconds.</span>
+      {/* Main Workspace */}
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8 sm:py-12 flex flex-col items-center">
+        {/* Workspace Introduction */}
+        <div className="text-center max-w-xl mx-auto mb-7">
+          <h1 className="font-heading font-semibold text-2xl sm:text-3xl text-slate-100 tracking-tight">
+            Webpage Summarization Workspace
           </h1>
-
-          <p className="mt-4 text-slate-400 text-sm sm:text-base leading-relaxed">
-            Enter any public article, documentation, or news URL. WebSage extracts readable text, strips boilerplate, and produces an instant 150-word synthesis.
+          <p className="mt-2 text-slate-400 text-xs sm:text-sm leading-relaxed">
+            Extract readable content, strip layout noise, and generate high-density objective summaries from public URLs.
           </p>
         </div>
 
-        {/* URL Input Form */}
-        <div className="w-full max-w-2xl mb-8">
+        {/* Primary Input Workspace Card */}
+        <div className="w-full mb-6">
           <UrlForm onSubmit={handleSummarize} isLoading={isLoading} />
         </div>
 
-        {/* Loading Indicator */}
+        {/* Loading State Feedback (Indeterminate state without fabricated progressive stages) */}
         {isLoading && (
-          <div className="w-full max-w-2xl py-12 flex flex-col items-center justify-center text-center animate-in fade-in duration-300">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full border-4 border-slate-800 border-t-cyan-500 animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-cyan-400 animate-pulse" />
-              </div>
-            </div>
-            <h3 className="mt-6 text-base font-semibold text-white">Analyzing & Summarizing Webpage</h3>
-            <p className="mt-1 text-xs text-slate-400 max-w-sm">
-              Fetching public HTML safely, filtering non-content elements, and synthesizing with AI...
+          <div className="w-full surface-card rounded-xl p-8 flex flex-col items-center justify-center text-center my-2">
+            <Loader2 className="w-6 h-6 text-cyan-500 animate-spin mb-3" />
+            <h2 className="text-sm font-medium text-slate-200">Processing Webpage Content</h2>
+            <p className="mt-1 text-xs text-slate-400 max-w-sm leading-relaxed">
+              Safely fetching HTML, extracting readable text, and generating AI summary...
             </p>
           </div>
         )}
 
-        {/* Error Banner */}
+        {/* Actionable Error Banner */}
         {errorState && !isLoading && (
-          <div className="w-full max-w-2xl mb-8">
+          <div className="w-full mb-6">
             <ErrorBanner
               message={errorState.message}
               code={errorState.code}
@@ -94,54 +88,69 @@ export function App() {
           </div>
         )}
 
-        {/* Summary Result Card */}
+        {/* Formatted Summary Result Card */}
         {summaryData && !isLoading && (
-          <div className="w-full max-w-3xl mb-12">
-            <SummaryCard data={summaryData} onReset={handleReset} />
+          <div className="w-full mb-8">
+            <SummaryCard data={summaryData} durationMs={requestDurationMs} onReset={handleReset} />
           </div>
         )}
 
-        {/* Feature Highlights Grid */}
-        {!summaryData && !isLoading && !errorState && (
-          <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8 pt-8 border-t border-slate-900">
-            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 text-left">
-              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-3">
-                <Shield className="w-4 h-4" />
-              </div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">SSRF Defenses</h4>
-              <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                Pre-request DNS validation, redirect re-checks, and private network range isolation.
-              </p>
+        {/* Supporting Architecture Specifications */}
+        <section aria-label="System Specifications" className="w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3.5 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-800/80">
+          <div className="py-2.5 px-3 sm:p-3.5 rounded-lg bg-slate-900/50 border border-slate-800/80 text-left">
+            <div className="flex items-center space-x-2 text-cyan-400 mb-1.5 sm:mb-2">
+              <Shield className="w-4 h-4 shrink-0" />
+              <h3 className="text-xs font-semibold text-slate-200">SSRF Protection</h3>
             </div>
-
-            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 text-left">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-3">
-                <Cpu className="w-4 h-4" />
-              </div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Clean Extraction</h4>
-              <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                Strips scripts, styling, ads, and navigation to feed pure text into the summarization model.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 text-left">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-3">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Zero Required Cost</h4>
-              <p className="mt-1 text-xs text-slate-400 leading-relaxed">
-                Architected to operate within free tier quotas with predictable bounds and hard spending limits.
-              </p>
-            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Pre-request DNS resolution checks and socket pinning against private/loopback IPs.
+            </p>
           </div>
-        )}
+
+          <div className="py-2.5 px-3 sm:p-3.5 rounded-lg bg-slate-900/50 border border-slate-800/80 text-left">
+            <div className="flex items-center space-x-2 text-indigo-400 mb-1.5 sm:mb-2">
+              <Cpu className="w-4 h-4 shrink-0" />
+              <h3 className="text-xs font-semibold text-slate-200">Clean Extraction</h3>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              HTML parser removes non-content tags and boilerplate; caps AI input at 20k characters.
+            </p>
+          </div>
+
+          <div className="py-2.5 px-3 sm:p-3.5 rounded-lg bg-slate-900/50 border border-slate-800/80 text-left">
+            <div className="flex items-center space-x-2 text-emerald-400 mb-1.5 sm:mb-2">
+              <Zap className="w-4 h-4 shrink-0" />
+              <h3 className="text-xs font-semibold text-slate-200">Free-Tier Operation</h3>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Architected to run within free-tier quotas on Render, Vercel, and Gemini/Groq APIs.
+            </p>
+          </div>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full py-6 px-4 border-t border-slate-900 text-center text-xs text-slate-500">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      {/* Product Footer */}
+      <footer className="w-full py-4 px-4 sm:px-6 border-t border-slate-800/80 text-xs text-slate-500 bg-slate-950/50">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <span>WebSage AI • Demonstrator Project v1.2</span>
-          <span>FastAPI • React 19 • TypeScript • AI-Powered</span>
+          <div className="flex items-center space-x-4">
+            <a
+              href="https://websage-ai.onrender.com/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-300 transition-colors"
+            >
+              API Docs
+            </a>
+            <a
+              href="https://github.com/shlok926/WebSage-AI"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-300 transition-colors"
+            >
+              GitHub Repository
+            </a>
+          </div>
         </div>
       </footer>
     </div>
